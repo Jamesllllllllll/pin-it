@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pinterest Create Pin — Link Generator</title>
+<style>
+  :root{
+    --bg: #f7f7f9;
+    --panel: #ffffff;
+    --muted: #667085;
+    --fg: #111318;
+    --accent: #e60023; /* Pinterest red */
+    --border: #e6e8ee;
+    --btn: #ffffff;
+    --btn-hover: #f2f4f7;
+    --shadow: 0 6px 20px rgba(27,31,39,.08);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: radial-gradient(1200px 700px at 10% -10%, rgba(230,0,35,.08), transparent 40%),
+                radial-gradient(1000px 600px at 100% 0%, rgba(230,0,35,.06), transparent 45%),
+                var(--bg);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    color: var(--fg);
+    font: 15px/1.55 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  }
+
+  .wrap {
+    max-width: 1280px;
+    margin: 4rem auto;
+    padding: 0 16px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .title {
+    font-size: clamp(22px, 3.5vw, 32px);
+    margin: 0 0 8px;
+    letter-spacing: .2px;
+  }
+  .subtitle {
+    margin: 0 auto;
+    max-width: 60ch;
+    color: var(--muted);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+  @media (max-width: 900px){
+    .grid { grid-template-columns: 1fr; }
+  }
+  @media (min-width: 1200px){
+    .grid { grid-template-columns: 1.2fr 1fr 1fr; }
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+  }
+
+  .form {
+    padding: 18px;
+  }
+  .form label {
+    display: block;
+    margin: 10px 0 6px;
+    font-weight: 600;
+  }
+  .form textarea,
+  .form input[type="text"]{
+    width: 100%;
+    padding: 12px 13px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--fg);
+    outline: none;
+  }
+  .form textarea:focus,
+  .form input[type="text"]:focus{
+    border-color: color-mix(in oklab, var(--accent) 60%, var(--border));
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  .btn-accent {
+    background: var(--accent);
+    border: none;
+    color: #fff;
+  }
+
+  .btn, .link-btn {
+    display: inline-block;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--btn);
+    color: var(--fg);
+    text-decoration: none;
+    cursor: pointer;
+    font: inherit;
+    transition: background .2s ease-in-out;
+    min-width: 130px;
+    text-align: center;
+  }
+  .btn:hover, .link-btn:hover { background: var(--btn-hover); }
+
+  .error {
+    margin-top: 8px;
+    color: #ff6b6b;
+    font-weight: 600;
+    min-height: 1.2em;
+  }
+
+  .panel {
+    padding: 16px 16px 20px;
+  }
+  .panel h3 {
+    margin: 4px 0 10px;
+    font-size: 15px;
+    color: var(--muted);
+    letter-spacing: .2px;
+    text-transform: uppercase;
+  }
+  .code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    border: 1px solid var(--border);
+    background: color-mix(in oklab, var(--panel) 96%, #000);
+    padding: 12px;
+    border-radius: 10px;
+    word-break: break-all;
+  }
+  /* Limit height of the generated HTML block and allow scrolling */
+  #outHtml { max-height: 300px; overflow: auto; }
+
+  .stack { display: grid; gap: 12px; }
+
+  .preview {
+    padding: 16px;
+    display: grid;
+    place-items: start;
+  }
+  .pinit-link { position: relative; display: inline-block; text-decoration: none; }
+  .pinit-link img { display: block; max-width: 100%; height: auto; border-radius: 12px; }
+
+  /* “Pin it” overlay */
+  .pinit-link::before {
+    content: "Pin it";
+    position: absolute;
+    top: 10px; left: 10px;
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    height: 32px; min-width: 32px;
+    padding: 0 10px;
+    background-color: #bb2729;
+    color: #fff;
+    font: 600 12px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.25);
+    opacity: .92;
+    transition: opacity .2s ease-in-out, transform .2s ease-in-out;
+    pointer-events: none;
+    z-index: 1;
+    transform: translateY(0);
+  }
+  .pinit-link:hover::before { opacity: 1; transform: translateY(-1px); }
+
+  .footer {
+    margin: 28px auto 8px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="header">
+      <h1 class="title">Pinterest Create Pin — Link Generator</h1>
+      <p class="subtitle">Enter a description, an image URL, and a destination URL. Generate a clean link that opens Pinterest’s Create Pin flow, plus a copy-pasteable <code>&lt;a&gt;&lt;img&gt;</code> block with a “Pin it” overlay.</p>
+    </header>
+
+    <main class="grid">
+      <!-- Form -->
+      <section class="card form" aria-label="Link builder form">
+        <label for="desc">Description</label>
+        <textarea id="desc" rows="4" placeholder="e.g., How I plan a week of easy family dinners with 5 ingredients per meal"></textarea>
+
+        <label for="media">Media (Image URL)</label>
+        <input id="media" type="text" placeholder="https://example.com/image.jpg" />
+
+        <label for="url">Destination URL</label>
+        <input id="url" type="text" placeholder="https://example.com/page" />
+
+        <label for="alt">Alt text (optional, for &lt;img&gt;)</label>
+        <input id="alt" type="text" placeholder="Describe the image for accessibility" />
+
+        <div class="actions">
+          <button id="generate" class="btn btn-accent" type="button">Generate</button>
+          <button id="prefill" class="btn" type="button">Fill test data</button>
+          <button id="copyLink" class="btn" type="button">Copy link</button>
+          <button id="copyHtml" class="btn" type="button">Copy HTML</button>
+          <a id="openLink" class="link-btn" href="#" target="_blank" rel="noopener">Open in new tab</a>
+        </div>
+        <div id="error" class="error" aria-live="polite"></div>
+      </section>
+
+      <!-- Output -->
+      <section class="stack">
+        <div class="card panel">
+          <h3>Generated link</h3>
+          <div id="outLink" class="code" style="min-height:48px;"></div>
+        </div>
+
+        <div class="card panel">
+          <h3>Copy-paste HTML block</h3>
+          <div id="outHtml" class="code" style="min-height:120px;"></div>
+        </div>
+      </section>
+
+      <section class="card panel preview">
+        <h3 style="margin:0 0 8px;color:var(--muted);font-size:15px;text-transform:uppercase;">Preview</h3>
+        <div id="preview"></div>
+      </section>
+    </main>
+
+    <p class="footer">Tip: Pinterest may use Open Graph tags from your destination page. For consistent results, set <code>og:title</code>, <code>og:description</code>, and <code>og:image</code> on that page.</p>
+  </div>
+
+<script>
+  (function(){
+    // Helpers
+    const $ = (sel) => document.querySelector(sel);
+    const escapeHtml = (s) => (s || "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    const isValidUrl = (v) => { try { new URL(v); return true; } catch { return false; } };
+
+    // Elements
+    const descEl = $("#desc");
+    const mediaEl = $("#media");
+    const urlEl   = $("#url");
+    const altEl   = $("#alt");
+
+    const btnGen  = $("#generate");
+    const btnPrefill = $("#prefill");
+    const btnCopyLink = $("#copyLink");
+    const btnCopyHtml = $("#copyHtml");
+    const aOpen   = $("#openLink");
+
+    const outLink = $("#outLink");
+    const outHtml = $("#outHtml");
+    const preview = $("#preview");
+    const errorEl = $("#error");
+
+    // Logic
+    const buildPinterestHref = (desc, media, url) =>
+      "https://www.pinterest.com/pin/create/button/?" +
+      "url=" + encodeURIComponent(url) +
+      "&media=" + encodeURIComponent(media) +
+      "&description=" + encodeURIComponent(desc);
+
+    const buildEmbeddableBlock = (href, imgSrc, alt) => [
+      '<style>',
+      '.pinit-link{position:relative;display:inline-block;text-decoration:none;}',
+      '.pinit-link img{display:block;max-width:100%;height:auto;border-radius:12px;}',
+      '.pinit-link::before{content:"Pin it";position:absolute;top:10px;left:10px;display:inline-flex;align-items:center;justify-content:center;height:32px;min-width:32px;padding:0 10px;background-color:#bb2729;color:#fff;font:600 12px/1 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.25);opacity:.92;transition:opacity .2s ease-in-out,transform .2s ease-in-out;pointer-events:none;z-index:1;transform:translateY(0);}',
+      '.pinit-link:hover::before{opacity:1;transform:translateY(-1px);}',
+      '</style>',
+      '<a class="pinit-link" href="', href, '" target="_blank" rel="noopener">',
+      '  <img src="', escapeHtml(imgSrc), '" alt="', escapeHtml(alt || ""), '">',
+      '</a>'
+    ].join("");
+
+    function generate() {
+      const desc  = (descEl.value || "").trim();
+      const media = (mediaEl.value || "").trim();
+      const url   = (urlEl.value || "").trim();
+      const alt   = (altEl.value || "").trim();
+
+      errorEl.textContent = "";
+
+      if (!desc || !media || !url) {
+        errorEl.textContent = "Please fill in description, media, and destination URL.";
+        return;
+      }
+      if (!isValidUrl(media)) {
+        errorEl.textContent = "Media must be a valid absolute URL (https).";
+        return;
+      }
+      if (!isValidUrl(url)) {
+        errorEl.textContent = "Destination URL must be a valid absolute URL (https).";
+        return;
+      }
+
+      const href = buildPinterestHref(desc, media, url);
+      outLink.textContent = href;
+      aOpen.href = href;
+
+      const htmlBlock = buildEmbeddableBlock(href, media, alt);
+      outHtml.textContent = htmlBlock;
+
+      preview.innerHTML =
+        '<a class="pinit-link" href="'+ href +'" target="_blank" rel="noopener">' +
+        '  <img src="'+ escapeHtml(media) +'" alt="'+ escapeHtml(alt) +'">' +
+        '</a>';
+    }
+
+    function copyToClipboard(text, btn){
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        const t = btn.textContent;
+        btn.textContent = "Copied";
+        setTimeout(()=> btn.textContent = t, 1200);
+      }).catch(() => {
+        // Fallback
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); } catch {}
+        document.body.removeChild(ta);
+      });
+    }
+
+    // Events
+    btnGen.addEventListener("click", generate);
+    btnPrefill.addEventListener("click", () => {
+      mediaEl.value = "https://meaganwilliamson.com/wp-content/webp-express/webp-images/doc-root/wp-content/uploads/2018/07/MW-Blog-Post-Covers20.png.webp";
+      urlEl.value   = "https://meaganwilliamson.com/drive-traffic-to-your-shopify-store-with-pinterests/";
+      descEl.value  = "How to use Pinterest to promote your Shopify store";
+      altEl.value   = "How to use Pinterest to promote your Shopify store";
+      generate();
+    });
+    btnCopyLink.addEventListener("click", () => copyToClipboard(outLink.textContent.trim(), btnCopyLink));
+    btnCopyHtml.addEventListener("click", () => copyToClipboard(outHtml.textContent.trim(), btnCopyHtml));
+
+    
+  })();
+</script>
+</body>
+</html>
