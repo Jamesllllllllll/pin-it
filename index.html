@@ -314,7 +314,6 @@
 
       const href = buildPinterestHref(desc, media, url);
       outLink.textContent = href;
-      aOpen.href = href;
 
       const htmlBlock = buildEmbeddableBlock(href, media, alt);
       outHtml.textContent = htmlBlock;
@@ -354,7 +353,6 @@
       outLink.textContent = "";
       outHtml.textContent = "";
       preview.innerHTML = "";
-      aOpen.href = "#";
       errorEl.textContent = "";
     });
     btnPrefill.addEventListener("click", () => {
