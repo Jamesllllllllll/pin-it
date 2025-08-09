@@ -149,6 +149,7 @@
     border-radius: 10px;
     word-break: break-all;
   }
+  
   /* Limit height of the generated HTML block and allow scrolling */
   #outHtml { max-height: 300px; overflow: auto; }
 
@@ -216,10 +217,10 @@
 
         <div class="actions">
           <button id="generate" class="btn btn-accent" type="button">Generate</button>
-          <button id="prefill" class="btn" type="button">Fill test data</button>
           <button id="copyLink" class="btn" type="button">Copy link</button>
           <button id="copyHtml" class="btn" type="button">Copy HTML</button>
-          <a id="openLink" class="link-btn" href="#" target="_blank" rel="noopener">Open in new tab</a>
+          <button id="clear" class="btn" type="button">Clear</button>
+          <button id="prefill" class="btn" type="button">Fill with test data</button>
         </div>
         <div id="error" class="error" aria-live="polite"></div>
       </section>
@@ -261,9 +262,9 @@
 
     const btnGen  = $("#generate");
     const btnPrefill = $("#prefill");
+    const btnClear = $("#clear");
     const btnCopyLink = $("#copyLink");
     const btnCopyHtml = $("#copyHtml");
-    const aOpen   = $("#openLink");
 
     const outLink = $("#outLink");
     const outHtml = $("#outHtml");
@@ -344,6 +345,17 @@
 
     // Events
     btnGen.addEventListener("click", generate);
+    btnClear.addEventListener("click", () => {
+      descEl.value = "";
+      mediaEl.value = "";
+      urlEl.value = "";
+      altEl.value = "";
+      outLink.textContent = "";
+      outHtml.textContent = "";
+      preview.innerHTML = "";
+      aOpen.href = "#";
+      errorEl.textContent = "";
+    });
     btnPrefill.addEventListener("click", () => {
       mediaEl.value = "https://meaganwilliamson.com/wp-content/webp-express/webp-images/doc-root/wp-content/uploads/2018/07/MW-Blog-Post-Covers20.png.webp";
       urlEl.value   = "https://meaganwilliamson.com/drive-traffic-to-your-shopify-store-with-pinterests/";
