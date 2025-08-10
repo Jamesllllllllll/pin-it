@@ -22,13 +22,12 @@
   const likeBtn = $("#likeBtn");
 
   const VAL_TOWN_URL = "https://Jamesllllllllll--019894a514b47659ac14319f8b619533.web.val.run";
+  const LIKE_ID = document.body?.dataset?.likeId || "pinit-app";
 
-  // Like counter functionality using val.town API
+  // Like counter functionality using ID-based val.town API
   async function fetchLikeCount() {
     try {
-      // Get page-specific likes using the current page path
-      const currentPage = window.location.pathname;
-      const response = await fetch(`${VAL_TOWN_URL}/api/likes/pinit?pageUrl=${encodeURIComponent(currentPage)}`);
+      const response = await fetch(`${VAL_TOWN_URL}/api/likes/${encodeURIComponent(LIKE_ID)}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -49,16 +48,13 @@
       likeCount.style.opacity = '0.5';
       likeCount.style.transform = 'scale(0.9)';
       
-      // Record a like using the val.town API
+      // Record a like for this ID using the val.town API
       const response = await fetch(`${VAL_TOWN_URL}/api/like`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          website: 'pinit',
-          pageUrl: window.location.pathname
-        })
+        body: JSON.stringify({ id: LIKE_ID })
       });
       
       if (response.ok) {
