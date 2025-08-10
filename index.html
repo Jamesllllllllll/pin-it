@@ -291,6 +291,12 @@
     </main>
 
     <p class="footer">Tip: Pinterest may use Open Graph tags from your destination page. For consistent results, set <code>og:title</code> and <code>og:description</code> on that page.</p>
+    
+    <!-- Subtle like counter -->
+    <div style="text-align: center; margin: 20px 0; font-size: 14px; color: var(--muted);">
+      <span id="likeCount" style="margin-right: 8px; transition: all 0.2s ease;">0</span>
+      <button id="likeBtn" style="background: none; border: none; cursor: pointer; font-size: 16px; color: var(--accent); padding: 0; margin: 0;">❤️</button>
+    </div>
   </div>
 
   <div class="bottom-buttons">
@@ -320,6 +326,83 @@
     const outHtml = $("#outHtml");
     const preview = $("#preview");
     const errorEl = $("#error");
+    const likeCount = $("#likeCount");
+    const likeBtn = $("#likeBtn");
+
+    const JSONBIN_BIN_ID = "68981fb6ae596e708fc66d34"; 
+    const JSONBIN_API_KEY = "$2a$10$LNX8GynHi5LJ1iPqy0MB9e.XZEP0Rkn33BXLv6ycaPmZby.KnhMxu"; 
+    const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+
+    // Like counter functionality
+    async function fetchLikeCount() {
+      try {
+        const response = await fetch(JSONBIN_URL, {
+          headers: {
+            'X-Access-Key': JSONBIN_API_KEY,
+            'X-Bin-Meta': 'false'
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const likes = data.likes || 0;
+          likeCount.textContent = likes;
+        } else {
+          likeCount.textContent = "0";
+        }
+      } catch (error) {
+        console.error("Error fetching like count:", error);
+        likeCount.textContent = "0";
+      }
+    }
+
+    async function incrementLikeCount() {
+      try {
+        // Show loading state on the number
+        likeCount.style.opacity = '0.5';
+        likeCount.style.transform = 'scale(0.9)';
+        
+        // Get current count
+        const currentResponse = await fetch(JSONBIN_URL, {
+          headers: {
+            'X-Access-Key': JSONBIN_API_KEY,
+            'X-Bin-Meta': 'false'
+          }
+        });
+        
+        if (!currentResponse.ok) {
+          throw new Error(`Failed to fetch current count: ${currentResponse.status}`);
+        }
+        
+        const currentData = await currentResponse.json();
+        const currentCount = currentData.likes || 0;
+        const newCount = currentCount + 1;
+        
+        // Update the bin
+        const updateResponse = await fetch(JSONBIN_URL, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Access-Key': JSONBIN_API_KEY
+          },
+          body: JSON.stringify({ likes: newCount })
+        });
+        
+        if (updateResponse.ok) {
+          likeCount.textContent = newCount;
+          // Animate the number update
+          likeCount.style.opacity = '1';
+          likeCount.style.transform = 'scale(1.1)';
+          setTimeout(() => {
+            likeCount.style.transform = 'scale(1)';
+          }, 150);
+        }
+      } catch (error) {
+        console.error("Error updating like count:", error);
+        // Reset loading state on error
+        likeCount.style.opacity = '1';
+        likeCount.style.transform = 'scale(1)';
+      }
+    }
 
     // Logic
     const buildPinterestHref = (desc, media, url) =>
@@ -427,9 +510,11 @@
     });
     btnCopyLink.addEventListener("click", () => copyToClipboard(outLink.textContent.trim(), btnCopyLink));
     btnCopyHtml.addEventListener("click", () => copyToClipboard(outHtml.textContent.trim(), btnCopyHtml));
+    likeBtn.addEventListener("click", incrementLikeCount);
 
     // Initial update
     updateButtonStates();
+    fetchLikeCount(); // Fetch initial like count
     // Update button states on input changes
     descEl.addEventListener("input", updateButtonStates);
     mediaEl.addEventListener("input", updateButtonStates);
