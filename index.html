@@ -11,7 +11,8 @@
     --panel: #ffffff;
     --muted: #667085;
     --fg: #111318;
-    --accent: #e60023; /* Pinterest red */
+    --accent: #e60023;
+    --secondary: #28354e;
     --border: #e6e8ee;
     --btn: #ffffff;
     --btn-hover: #f2f4f7;
@@ -47,9 +48,14 @@
     letter-spacing: .2px;
   }
   .subtitle {
+    text-align: left;
     margin: 0 auto;
-    max-width: 60ch;
-    color: var(--muted);
+    max-width: 75ch;
+    color: var(--secondary);
+  }
+
+  .subtitle:not(:last-child) {
+    margin-bottom: 12px;
   }
 
   .grid {
@@ -109,7 +115,7 @@
     color: #fff;
   }
 
-  .btn, .link-btn {
+  .btn {
     display: inline-block;
     padding: 10px 14px;
     border: 1px solid var(--border);
@@ -123,7 +129,17 @@
     min-width: 130px;
     text-align: center;
   }
-  .btn:hover, .link-btn:hover { background: var(--btn-hover); }
+  .btn:hover { background: var(--btn-hover); }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--btn);
+  }
+  .btn:disabled:hover { 
+    background: var(--btn); 
+    transform: none;
+  }
 
   .error {
     margin-top: 8px;
@@ -138,7 +154,7 @@
   .panel h3 {
     margin: 4px 0 10px;
     font-size: 15px;
-    color: var(--muted);
+    color: var(--secondary);
     letter-spacing: .2px;
     text-transform: uppercase;
   }
@@ -151,7 +167,6 @@
     word-break: break-all;
   }
   
-  /* Limit height of the generated HTML block and allow scrolling */
   #outHtml { max-height: 300px; overflow: auto; }
 
   .stack { display: grid; gap: 12px; }
@@ -164,7 +179,6 @@
   .pinit-link { position: relative; display: inline-block; text-decoration: none; }
   .pinit-link img { display: block; max-width: 100%; height: auto; border-radius: 12px; }
 
-  /* “Pin it” overlay */
   .pinit-link::before {
     content: "Pin it";
     position: absolute;
@@ -189,8 +203,38 @@
   .footer {
     margin: 28px auto 8px;
     text-align: center;
-    color: var(--muted);
+    color: var(--secondary);
     font-size: 13px;
+  }
+
+  .made-by {
+    background: rgba(40,53,78,0.1);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    backdrop-filter: blur(10px);
+    color: var(--fg);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(40,53,78,0.2);
+  }
+
+  .made-by:hover {
+    background: rgba(40,53,78,0.15);
+    transform: translateY(-1px);
+  }
+
+  .bottom-buttons {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 1000;
   }
 </style>
 </head>
@@ -198,13 +242,14 @@
   <div class="wrap">
     <header class="header">
       <h1 class="title">Pinterest Create Pin — Link Generator</h1>
-      <p class="subtitle">Enter a description, an image URL, and a destination URL. Generate a clean link that opens Pinterest’s Create Pin flow, plus a copy-pasteable <code>&lt;a&gt;&lt;img&gt;</code> block with a “Pin it” overlay.</p>
+      <p class="subtitle">Enter an image URL and destination URL to generate a Pinterest Create Pin link. The description is optional - Pinterest will use the page's Open Graph description if available.</p>
+      <p class="subtitle">You can use the generated link on an image - Or you can use the HTML block to create a linked image with a "Pin it" overlay icon.</p>
     </header>
 
     <main class="grid">
       <!-- Form -->
       <section class="card form" aria-label="Link builder form">
-        <label for="desc">Description</label>
+        <label for="desc">Description (optional - Pinterest will use the page's Open Graph description if available)</label>
         <textarea id="desc" rows="4" placeholder="e.g., How I plan a week of easy family dinners with 5 ingredients per meal"></textarea>
 
         <label for="media">Media (Image URL)</label>
@@ -240,12 +285,18 @@
       </section>
 
       <section class="card panel preview">
-        <h3 style="margin:0 0 8px;color:var(--muted);font-size:15px;text-transform:uppercase;">Preview</h3>
+        <h3 style="margin:0 0 8px;color:var(--secondary);font-size:15px;text-transform:uppercase;">Preview</h3>
         <div id="preview"></div>
       </section>
     </main>
 
-    <p class="footer">Tip: Pinterest may use Open Graph tags from your destination page. For consistent results, set <code>og:title</code>, <code>og:description</code>, and <code>og:image</code> on that page.</p>
+    <p class="footer">Tip: Pinterest may use Open Graph tags from your destination page. For consistent results, set <code>og:title</code> and <code>og:description</code> on that page.</p>
+  </div>
+
+  <div class="bottom-buttons">
+    <a href="https://pinpotential.com" class="made-by" target="_blank" rel="noopener">
+      A tool from Pin Potential
+    </a>
   </div>
 
 <script>
@@ -260,13 +311,11 @@
     const mediaEl = $("#media");
     const urlEl   = $("#url");
     const altEl   = $("#alt");
-
     const btnGen  = $("#generate");
     const btnPrefill = $("#prefill");
     const btnClear = $("#clear");
     const btnCopyLink = $("#copyLink");
     const btnCopyHtml = $("#copyHtml");
-
     const outLink = $("#outLink");
     const outHtml = $("#outHtml");
     const preview = $("#preview");
@@ -291,6 +340,18 @@
       '</a>'
     ].join("");
 
+    function updateButtonStates() {
+      const hasMedia = (mediaEl.value || "").trim();
+      const hasUrl = (urlEl.value || "").trim();
+      const hasRequired = hasMedia && hasUrl;
+      
+      btnGen.disabled = !hasRequired;
+      
+      const hasGeneratedContent = outLink.textContent.trim() && outHtml.textContent.trim();
+      btnCopyLink.disabled = !hasGeneratedContent;
+      btnCopyHtml.disabled = !hasGeneratedContent;
+    }
+
     function generate() {
       const desc  = (descEl.value || "").trim();
       const media = (mediaEl.value || "").trim();
@@ -299,8 +360,8 @@
 
       errorEl.textContent = "";
 
-      if (!desc || !media || !url) {
-        errorEl.textContent = "Please fill in description, media, and destination URL.";
+      if (!media || !url) {
+        errorEl.textContent = "Please fill in media (image URL) and destination URL.";
         return;
       }
       if (!isValidUrl(media)) {
@@ -322,7 +383,9 @@
         '<a class="pinit-link" href="'+ href +'" target="_blank" rel="noopener">' +
         '  <img src="'+ escapeHtml(media) +'" alt="'+ escapeHtml(alt) +'">' +
         '</a>';
-    }
+       
+       updateButtonStates();
+     }
 
     function copyToClipboard(text, btn){
       if (!text) return;
@@ -331,7 +394,6 @@
         btn.textContent = "Copied";
         setTimeout(()=> btn.textContent = t, 1200);
       }).catch(() => {
-        // Fallback
         const ta = document.createElement("textarea");
         ta.value = text;
         ta.style.position = "fixed";
@@ -354,6 +416,7 @@
       outHtml.textContent = "";
       preview.innerHTML = "";
       errorEl.textContent = "";
+      updateButtonStates();
     });
     btnPrefill.addEventListener("click", () => {
       mediaEl.value = "https://meaganwilliamson.com/wp-content/webp-express/webp-images/doc-root/wp-content/uploads/2018/07/MW-Blog-Post-Covers20.png.webp";
@@ -365,6 +428,12 @@
     btnCopyLink.addEventListener("click", () => copyToClipboard(outLink.textContent.trim(), btnCopyLink));
     btnCopyHtml.addEventListener("click", () => copyToClipboard(outHtml.textContent.trim(), btnCopyHtml));
 
+    // Initial update
+    updateButtonStates();
+    // Update button states on input changes
+    descEl.addEventListener("input", updateButtonStates);
+    mediaEl.addEventListener("input", updateButtonStates);
+    urlEl.addEventListener("input", updateButtonStates);
     
   })();
 </script>
