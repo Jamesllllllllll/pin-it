@@ -18,66 +18,7 @@
   const outHtml = $("#outHtml");
   const preview = $("#preview");
   const errorEl = $("#error");
-  const likeCount = $("#likeCount");
-  const likeBtn = $("#likeBtn");
-
-  const VAL_TOWN_URL = "https://Jamesllllllllll--019894a514b47659ac14319f8b619533.web.val.run";
-  const LIKE_ID = document.body?.dataset?.likeId || "pinit-app";
-
-  // Like counter functionality using ID-based val.town API
-  async function fetchLikeCount() {
-    try {
-      const response = await fetch(`${VAL_TOWN_URL}/api/likes/${encodeURIComponent(LIKE_ID)}`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        const likes = data.likeCount || 0;
-        likeCount.textContent = likes;
-      } else {
-        likeCount.textContent = "0";
-      }
-    } catch (error) {
-      console.error("Error fetching like count:", error);
-      likeCount.textContent = "0";
-    }
-  }
-
-  async function incrementLikeCount() {
-    try {
-      // Show loading state on the number
-      likeCount.style.opacity = '0.5';
-      likeCount.style.transform = 'scale(0.9)';
-      
-      // Record a like for this ID using the val.town API
-      const response = await fetch(`${VAL_TOWN_URL}/api/like`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ id: LIKE_ID })
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        const newCount = data.likeCount || 0;
-        likeCount.textContent = newCount;
-        
-        // Animate the number update
-        likeCount.style.opacity = '1';
-        likeCount.style.transform = 'scale(1.1)';
-        setTimeout(() => {
-          likeCount.style.transform = 'scale(1)';
-        }, 150);
-      } else {
-        throw new Error(`Failed to record like: ${response.status}`);
-      }
-    } catch (error) {
-      console.error("Error updating like count:", error);
-      // Reset loading state on error
-      likeCount.style.opacity = '1';
-      likeCount.style.transform = 'scale(1)';
-    }
-  }
+  // Likes are now handled by external widget script
 
   // Logic
   const buildPinterestHref = (desc, media, url) =>
@@ -185,11 +126,10 @@
   });
   btnCopyLink.addEventListener("click", () => copyToClipboard(outLink.textContent.trim(), btnCopyLink));
   btnCopyHtml.addEventListener("click", () => copyToClipboard(outHtml.textContent.trim(), btnCopyHtml));
-  likeBtn.addEventListener("click", incrementLikeCount);
 
   // Initial update
   updateButtonStates();
-  fetchLikeCount(); // Fetch initial like count
+  // Likes widget handles its own initialization
   // Update button states on input changes
   descEl.addEventListener("input", updateButtonStates);
   mediaEl.addEventListener("input", updateButtonStates);
