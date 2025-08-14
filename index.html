@@ -6,6 +6,7 @@
   <link rel="icon" href="https://fav.farm/📍" />
   <title>Pinterest Create Pin — Link Generator</title>
   <link rel="stylesheet" href="css/styles.css">
+  <script defer data-domain="pinit.page" src="https://plausible.io/js/script.outbound-links.tagged-events.js"></script>
 </head>
 <body data-like-id="pinit-app">
   <div class="wrap">
@@ -31,9 +32,9 @@
         <input id="alt" type="text" placeholder="Describe the image for accessibility" />
 
         <div class="actions">
-          <button id="generate" class="btn btn-accent" type="button">Generate</button>
-          <button id="copyLink" class="btn" type="button">Copy link</button>
-          <button id="copyHtml" class="btn" type="button">Copy HTML</button>
+          <button id="generate" class="btn btn-accent plausible-event-name=Generate" type="button">Generate</button>
+          <button id="copyLink" class="btn plausible-event-name=Copy+Link" type="button">Copy link</button>
+          <button id="copyHtml" class="btn plausible-event-name=Copy+HTML" type="button">Copy HTML</button>
           <button id="clear" class="btn" type="button">Clear</button>
           <button id="prefill" class="btn" type="button">Fill with test data</button>
         </div>
